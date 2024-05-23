@@ -1,5 +1,0 @@
-import numpy as np
-
-def func(x,m,n):
-    return 1. / (1. + np.exp(-n*(x-m)))
-
