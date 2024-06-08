@@ -3,7 +3,7 @@ import npmatmul
 
 # Logistic function------------------------------------
 def logistic(X, Theta):
-    dot = npmatmul.matrix_multiply_omp(X, Theta)
+    dot = npmatmul.matrix_multiply(X, Theta)
     return 1.0 / (1 + np.exp(-dot))
 
 #Cost function-----------------------------------------
@@ -53,17 +53,8 @@ def logi(z):
     return 1.0 / (1 + np.exp(-z))
 
 def predictOneVsAll(X, Theta):
-    M = logi(npmatmul.matrix_multiply_omp(X,Theta))
+    M = logi(npmatmul.matrix_multiply(X,Theta))
     p = np.array([[np.where(row == np.max(row))[0][0]] for row in M])
     return p
 
-#The boundary is found when logistic(theta_min, x) = 0.5
-# which is the same as x . theta_min = 0
-def decisionBoundary(theta, xin, xfin, N):
-    Dx = (xfin-xin) / N
-    a = theta[1] / theta[2]
-    b = theta[0] / theta[2]
-    boundary = []
-    for x in np.arange(xin, xfin+1, Dx):
-        boundary.append([x, -a*x-b])
-    return pd.DataFrame(boundary, columns=['x1', 'x2'])
+

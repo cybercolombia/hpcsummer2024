@@ -30,8 +30,12 @@ py::array_t<double> matrix_multiply(py::array_t<double,py::array::c_style> A,
   double *ptr_B = static_cast<double *>(B_buf.ptr);
   double *ptr_res = static_cast<double *>(res_buf.ptr);
 
-  //Implement matrix multiplication
-  
+  for(int i = 0; i < nrows; i++){
+    for(int j = 0; j < ncols; j++){
+      for(int k = 0; k < nn; k++)
+	ptr_res[i*ncols+j] += ptr_A[i*nn+k] * ptr_B[k*ncols+j];  
+    }
+  }
   
   return result;
 }
@@ -62,8 +66,19 @@ py::array_t<double> matrix_multiply_omp(py::array_t<double,py::array::c_style> A
   double *ptr_B = static_cast<double *>(B_buf.ptr);
   double *ptr_res = static_cast<double *>(res_buf.ptr);
 
-  //Perform the matrix multiplication and parallelize with OMP
-  
+  //Perform the matrix multiplication
+  #pragma omp parallel default(shared)
+  {
+    //if(omp_get_thread_num() == 0)
+    //  printf("num threads: %d\n",omp_get_num_threads());
+    #pragma omp for schedule(auto), collapse(2)
+    for(int i = 0; i < nrows; i++){
+      for(int j = 0; j < ncols; j++){
+	for(int k = 0; k < nn; k++)
+	  ptr_res[i*ncols+j] += ptr_A[i*nn+k] * ptr_B[k*ncols+j]; 
+      }
+    }
+  }
   
   return result;
 }

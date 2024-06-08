@@ -8,6 +8,8 @@ void matrix_multiply(const int *ptr_A, const int *ptr_B, int *ptr_res,
   }
     
   //Implement matrix multiplication
+    
+    
 }
 
 int main(int argc, char *argv[]) {

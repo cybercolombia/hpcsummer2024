@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from time import perf_counter
 
 import lc_functions as lcf
 
@@ -24,8 +25,11 @@ if __name__ == '__main__':
     X.shape, y.shape
 
     #Run gradient descent------------------------------
+    start_time = perf_counter()
     Th, ep, hist = lcf.grad_desc(X,y,lamb,alpha,num_iters,100)
-
+    end_time = perf_counter()
+    
+    #Save model and data-------------------------------
     with open("model.dat","w") as model_f:
         for i in range(Th.shape[0]):
             for j in range(Th.shape[1]):
@@ -36,23 +40,5 @@ if __name__ == '__main__':
         for i in range(len(ep)):
             cdata.write("{0} {1}\n".format(ep[i],hist[i]))
     
-    # Test accuracy------------------------------------
-
-    # Read test data
-    test_data = pd.read_csv("test.txt",header=None)
-    test_data.columns = ['feature 1', 'feature 2', 'class']
-    test_data.head()
-
-    #Create matrix Xtest and convert to array
-    Xt = test_data.iloc[:,0:2].to_numpy()
-    bt = np.ones((Xt.shape[0],1))
-    Xt = np.hstack((bt,Xt))
-    #Create the ytest vector
-    yt = test_data.iloc[:,2].to_numpy()[np.newaxis].T #create a new axis to convert a 1d array
-    Xt.shape, yt.shape
-
-    # Predict test data---------------------------------
-    pred = lcf.predictOneVsAll(Xt,Th)
-
-    print("Training set accuracy: {0:.3f}".format(np.mean(pred==yt)))
+    print("Time: {0}".format(end_time-start_time))
     
