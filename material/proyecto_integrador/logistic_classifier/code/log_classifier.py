@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from time import perf_counter
+import os
 
 import lc_functions as lcf
 
@@ -10,8 +11,9 @@ if __name__ == '__main__':
     alpha = 0.005; # Convergence parameter
     num_iters = 100000;
 
+    path = os.getcwd()
     # Load Data----------------------------------------
-    data = pd.read_csv("train.txt",header=None)
+    data = pd.read_csv(path+"/data/train.txt",header=None)
     data.columns = ['feature 1', 'feature 2', 'class']
     data.head()
     
@@ -30,13 +32,13 @@ if __name__ == '__main__':
     end_time = perf_counter()
     
     #Save model and data-------------------------------
-    with open("model.dat","w") as model_f:
+    with open(path+"/data/model.dat","w") as model_f:
         for i in range(Th.shape[0]):
             for j in range(Th.shape[1]):
                 model_f.write("{0} ".format(Th[i,j]))
             model_f.write("\n")
     
-    with open("convergence.dat","w") as cdata:
+    with open(path+"/data/convergence.dat","w") as cdata:
         for i in range(len(ep)):
             cdata.write("{0} {1}\n".format(ep[i],hist[i]))
     

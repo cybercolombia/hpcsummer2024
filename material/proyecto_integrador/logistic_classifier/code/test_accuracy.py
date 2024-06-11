@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import os
 
 import lc_functions as lcf
 
@@ -8,15 +9,16 @@ import lc_functions as lcf
 
 if __name__ == '__main__':
     #Load model
+    path = os.getcwd()
     Th = []
-    with open("model.dat","r") as mdata:
+    with open(path+"/data/model.dat","r") as mdata:
         for line in mdata:
             v = list(map(float,line.split()))
             Th.append(v)
     Th = np.asarray(Th)
     
     # Read test data
-    test_data = pd.read_csv("test.txt",header=None)
+    test_data = pd.read_csv(path+"/data/test.txt",header=None)
     test_data.columns = ['feature 1', 'feature 2', 'class']
     test_data.head()
 
