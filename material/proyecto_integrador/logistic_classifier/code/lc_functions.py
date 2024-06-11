@@ -33,7 +33,7 @@ def grad_J(X, y, Theta, lamb):
     thetac[:,0] = 0
     reg = fact*thetac
     
-    return npmatmul.matrix_multiply_omp(X.T,Ay)/y.shape[0] + reg
+    return npmatmul.matrix_multiply(X.T,Ay)/y.shape[0] + reg
 
 # Gradient descent algorithm---------------------------
 def grad_desc(X, y, lamb, alpha, epochs, iprint):

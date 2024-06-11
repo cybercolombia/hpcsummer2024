@@ -37,6 +37,7 @@ py::array_t<double> matrix_multiply(py::array_t<double,py::array::c_style> A,
 }
 
 
+/*
 py::array_t<double> matrix_multiply_omp(py::array_t<double,py::array::c_style> A,
 					py::array_t<double,py::array::c_style> B) {
   //Read the numpy array buffers
@@ -67,12 +68,12 @@ py::array_t<double> matrix_multiply_omp(py::array_t<double,py::array::c_style> A
   
   return result;
 }
-
+*/
 
 //Pybind11 module macro that creates an entry point that will be invoked
 // when the python interpreter imports an extension module.
 PYBIND11_MODULE(npmatmul, m) {
   m.doc() = "Pybind11 module that performs numpy array multiplication";
   m.def("matrix_multiply",&matrix_multiply,"Function that multiplies two matrices");
-  m.def("matrix_multiply_omp",&matrix_multiply_omp,"Function that multiplies two matrices. Uses OMP");
+  //m.def("matrix_multiply_omp",&matrix_multiply_omp,"Function that multiplies two matrices. Uses OMP");
 }
