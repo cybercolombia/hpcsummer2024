@@ -16,7 +16,7 @@ int main(int argc, char **argv)
   MPI_Comm_size(MPI_COMM_WORLD, &world_size);
 
   printf("Number of rannks: %d\n",   world_size);
-f (world_rank == 0) {
+    if (world_rank == 0) {
         int data = 100;
         MPI_Send(&data, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
         printf("Process 0 sent data %d to process 1\n", data);
