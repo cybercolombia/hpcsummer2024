@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define N 200  // Grid size
+
 #define ITERATIONS 100  // Number of iterations
+
+#define N 100 // Initial Grid Size
 
 // Function to initialize the grid
 void initialize_grid(double grid[N][N]) {
@@ -42,7 +44,24 @@ void print_grid(double grid[N][N]) {
     printf("\n");
 }
 
+
+void write_grid_to_file(const char *filename, double grid[N][N]) {
+    FILE *file = fopen(filename, "w");
+    if (file == NULL) {
+        fprintf(stderr, "Error opening file for writing\n");
+        return;
+    }
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            fprintf(file, "%.2f ", grid[i][j]);
+        }
+        fprintf(file, "\n");
+    }
+    fclose(file);
+}
+
 int main(int argc, char *argv[]) {
+      
     int rank, size;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -50,11 +69,11 @@ int main(int argc, char *argv[]) {
 
     double grid[N][N], new_grid[N][N];
     printf("The size of this matrix is %lu \n ",sizeof(grid)/sizeof(grid[0][0]));
-    initialize_grid(grid);
+   
     if (rank == 0) {
-        initialize_grid_from_file(grid);
+         initialize_grid(grid);
         printf("Initial Grid:\n");
-        print_grid(grid);
+        write_grid_to_file("initial_grid.txt", grid);
     }
 
     // Broadcast the grid to all processes
@@ -80,7 +99,7 @@ int main(int argc, char *argv[]) {
 
     if (rank == 0) {
         printf("Final Grid:\n");
-        print_grid(final_grid);
+       write_grid_to_file("final_grid.txt", final_grid);
     }
 
 
