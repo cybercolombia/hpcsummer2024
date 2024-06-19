@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define N 10  // Grid size
+#define N 1000  // Grid size
 #define ITERATIONS 100  // Number of iterations
 
 // Function to initialize the grid
@@ -39,6 +39,7 @@ int main(int argc, char *argv[]) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
     double grid[N][N], new_grid[N][N];
+    printf("The size of this matrix is %lu \n ",sizeof(grid)/sizeof(grid[0][0]));
     initialize_grid(grid);
 
     for (int iter = 0; iter < ITERATIONS; iter++) {
