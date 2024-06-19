@@ -1,6 +1,7 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <vector>
 
 
 #define ITERATIONS 100  // Number of iterations
@@ -17,8 +18,8 @@ void initialize_grid(double grid[N][N]) {
 }
 
 // Function to perform the stencil computation
-void stencil_step(double grid[N][N], double new_grid[N][N]) {
-    for (int i = 1; i < N-1; i++) {
+void stencil_step(double grid[N][N], double new_grid[N][N], int start_row, int end_row) {
+    for (int i = start_row; i < end_row; i++) {
         for (int j = 1; j < N-1; j++) {
             new_grid[i][j] = 0.25 * (grid[i-1][j] + grid[i+1][j] + grid[i][j-1] + grid[i][j+1]);
         }
@@ -26,12 +27,12 @@ void stencil_step(double grid[N][N], double new_grid[N][N]) {
 }
 
 // Function to copy the new grid to the old grid
-void copy_grid(double dest[N][N], double src[N][N]) {
-    for (int i = 0; i < N; i++) {
+void copy_grid(double dest[N][N], double src[N][N], int start_row, int end_row) {
+    for (int i = start_row; i < end_row; i++) {
         for (int j = 0; j < N; j++) {
             dest[i][j] = src[i][j];
-        }
-    }
+        }				 
+    }				 
 }
 
 void print_grid(double grid[N][N]) {
@@ -61,45 +62,60 @@ void write_grid_to_file(const char *filename, double grid[N][N]) {
 }
 
 int main(int argc, char *argv[]) {
-      
+	  
     int rank, size;
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
+    if (N % size != 0) {
+        if (rank == 0) {
+            fprintf(stderr, "The grid size N must be divisible by the number of processes.\n");
+        }
+        MPI_Finalize();
+        return -1;
+    }
+
+    int rows_per_process = N / size;
+    int start_row = rank * rows_per_process;
+    int end_row = start_row + rows_per_process;
+
     double grid[N][N], new_grid[N][N];
-    printf("The size of this matrix is %lu \n ",sizeof(grid)/sizeof(grid[0][0]));
-   
+    double local_grid[rows_per_process][N], local_new_grid[rows_per_process][N];
+
     if (rank == 0) {
-         initialize_grid(grid);
-        printf("Initial Grid:\n");
+        initialize_grid(grid);
+								  
         write_grid_to_file("initial_grid.txt", grid);
     }
 
-    // Broadcast the grid to all processes
-    MPI_Bcast(grid, N*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    // Scatter the initial grid to all processes
+    MPI_Scatter(grid, rows_per_process * N, MPI_DOUBLE, local_grid, rows_per_process * N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     for (int iter = 0; iter < ITERATIONS; iter++) {
-        stencil_step(grid, new_grid);
-        copy_grid(grid, new_grid);
+        stencil_step(local_grid, local_new_grid, 1, rows_per_process-1);
+
+        // Copy new local grid to old local grid
+        copy_grid(local_grid, local_new_grid, 1, rows_per_process-1);
 
         // Exchange boundary rows between neighboring processes
         if (rank > 0) {
-            MPI_Send(grid[1], N, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD);
-            MPI_Recv(grid[0], N, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(local_grid[1], N, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD);
+            MPI_Recv(local_grid[0], N, MPI_DOUBLE, rank-1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (rank < size-1) {
-            MPI_Send(grid[N-2], N, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD);
-            MPI_Recv(grid[N-1], N, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(local_grid[rows_per_process-2], N, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD);
+            MPI_Recv(local_grid[rows_per_process-1], N, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
+
     // Gather the final grid from all processes
-    double final_grid[N][N];
-    MPI_Gather(grid, N*N, MPI_DOUBLE, final_grid, N*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+							
+    MPI_Gather(local_grid, rows_per_process * N, MPI_DOUBLE, grid, rows_per_process * N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     if (rank == 0) {
-        printf("Final Grid:\n");
-       write_grid_to_file("final_grid.txt", final_grid);
+								
+        write_grid_to_file("final_grid.txt", grid);
     }
 
 
