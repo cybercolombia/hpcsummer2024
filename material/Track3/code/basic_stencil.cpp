@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define N 1000  // Grid size
+#define N 200  // Grid size
 #define ITERATIONS 100  // Number of iterations
 
 // Function to initialize the grid
@@ -32,6 +32,16 @@ void copy_grid(double dest[N][N], double src[N][N]) {
     }
 }
 
+void print_grid(double grid[N][N]) {
+    for (int i = 0; i < N; i++) {
+        for (int j = 0; j < N; j++) {
+            printf("%.2f ", grid[i][j]);
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
 int main(int argc, char *argv[]) {
     int rank, size;
     MPI_Init(&argc, &argv);
@@ -41,6 +51,14 @@ int main(int argc, char *argv[]) {
     double grid[N][N], new_grid[N][N];
     printf("The size of this matrix is %lu \n ",sizeof(grid)/sizeof(grid[0][0]));
     initialize_grid(grid);
+    if (rank == 0) {
+        initialize_grid_from_file(grid);
+        printf("Initial Grid:\n");
+        print_grid(grid);
+    }
+
+    // Broadcast the grid to all processes
+    MPI_Bcast(grid, N*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     for (int iter = 0; iter < ITERATIONS; iter++) {
         stencil_step(grid, new_grid);
@@ -56,6 +74,15 @@ int main(int argc, char *argv[]) {
             MPI_Recv(grid[N-1], N, MPI_DOUBLE, rank+1, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
     }
+    // Gather the final grid from all processes
+    double final_grid[N][N];
+    MPI_Gather(grid, N*N, MPI_DOUBLE, final_grid, N*N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        printf("Final Grid:\n");
+        print_grid(final_grid);
+    }
+
 
     MPI_Finalize();
     return 0;
